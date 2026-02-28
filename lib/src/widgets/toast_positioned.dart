@@ -4,15 +4,25 @@ import 'package:flutter_toasty/src/models/enums.dart';
 import 'package:flutter_toasty/src/models/toast_item.dart';
 import 'package:flutter_toasty/src/widgets/toast_widget.dart';
 
+/// {@template toast_positioned}
+/// A widget that positions and animates a list of toasts based on the specified [ToastPosition].
+/// It uses [AnimatedPositioned], [AnimatedScale], and [AnimatedOpacity] to
+/// create smooth entrance and exit animations for the toasts.
+/// The toasts are stacked with a slight offset to create a layered effect, and only the topmost toast is interactive while the others are ignored for pointer events.
+/// {@endtemplate}
 class ToastPositioned extends StatelessWidget {
-  final ToastPosition position;
-  final List<ToastItem> toasts;
-
+  /// {@macro toast_positioned}
   const ToastPositioned({
     super.key,
     required this.position,
     required this.toasts,
   });
+
+  /// The position of the toasts on the screen, which determines their alignment and animation behavior.
+  final ToastPosition position;
+
+  /// The list of toasts to display in this position. The toasts will be animated based on their order in the list, with the most recent toast appearing on top.
+  final List<ToastItem> toasts;
 
   static const _animationDuration = Duration(milliseconds: 300);
 

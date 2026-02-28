@@ -31,6 +31,8 @@ final defaultItemOptions = {
     ),
     showProgressBar: false,
     progressColor: const Color(0x80FFFFFF),
+    showLeadingIcon: true,
+    showCloseIcon: true,
   ),
   ToastType.error: ToastItemOptions(
     backgroundColor: Assets.errorColor,
@@ -48,6 +50,8 @@ final defaultItemOptions = {
     ),
     showProgressBar: false,
     progressColor: const Color(0x80FFFFFF),
+    showLeadingIcon: true,
+    showCloseIcon: true,
   ),
   ToastType.info: ToastItemOptions(
     backgroundColor: Assets.infoColor,
@@ -65,6 +69,8 @@ final defaultItemOptions = {
     ),
     showProgressBar: false,
     progressColor: const Color(0x80FFFFFF),
+    showLeadingIcon: true,
+    showCloseIcon: true,
   ),
   ToastType.warning: ToastItemOptions(
     backgroundColor: Assets.warningColor,
@@ -82,6 +88,8 @@ final defaultItemOptions = {
     ),
     showProgressBar: false,
     progressColor: const Color(0x80FFFFFF),
+    showLeadingIcon: true,
+    showCloseIcon: true,
   ),
   ToastType.custom: ToastItemOptions(
     backgroundColor: Colors.white,
@@ -92,6 +100,8 @@ final defaultItemOptions = {
     ),
     contentTextStyle: TextStyle(fontSize: 12, color: Colors.black),
     icon: const SizedBox.shrink(),
+    showLeadingIcon: false,
+    showCloseIcon: false,
   ),
 };
 

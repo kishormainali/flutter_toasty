@@ -6,7 +6,17 @@ import 'package:flutter_toasty/src/models/toasty_options.dart';
 import 'models/toast_item.dart';
 import 'widgets/toast_positioned.dart';
 
+/// {@template toasty_provider}
+/// A provider widget that manages the display of toasts in the application.
+/// It uses an [Overlay] to display toasts above the main content, and listens to changes in
+/// the [ToastManager] to update the displayed toasts accordingly.
+/// The provider should be placed near the root of the widget tree to ensure that toasts
+/// can be displayed over all content.
+/// It also handles the configuration of the [ToastManager] with the provided options
+/// and maximum number of toasts.
+/// {@endtemplate}
 class ToastyProvider extends StatefulWidget {
+  /// {@macro toasty_provider}
   const ToastyProvider({
     super.key,
     required this.child,
@@ -14,8 +24,20 @@ class ToastyProvider extends StatefulWidget {
     this.maxToasts,
   });
 
+  /// The child widget that will be wrapped by the provider.
+  /// This is typically the main content of the app, and the toasts
+  /// will be displayed above this content using an [Overlay].
   final Widget child;
+
+  /// Optional configuration options for the [ToastManager].
+  /// This can include default styling, behavior, and other settings
+  /// that will apply to all toasts managed by the provider.
   final ToastyOptions? options;
+
+  /// The maximum number of toasts that can be displayed at once.
+  /// If the limit is exceeded, the oldest toast will be dismissed to
+  /// make room for new ones. This helps prevent overwhelming the user with too
+  ///  many toasts and ensures a better user experience.
   final int? maxToasts;
 
   @override

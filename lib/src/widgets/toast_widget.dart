@@ -174,7 +174,7 @@ class _ToastContent extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              if (options.icon is! SizedBox) ...[
+              if (options.icon is! SizedBox && options.showLeadingIcon) ...[
                 ExcludeSemantics(
                   child: options.icon,
                 ), // Don't read decorative icons
@@ -199,7 +199,8 @@ class _ToastContent extends StatelessWidget {
                   ],
                 ),
               ),
-              _CloseButton(id: item.id, color: defaultStyle.color),
+              if (options.showCloseIcon)
+                _CloseButton(id: item.id, color: defaultStyle.color),
             ],
           ),
         ],

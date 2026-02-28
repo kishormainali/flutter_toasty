@@ -11,6 +11,8 @@ class ToastItemOptions {
     this.dismissDuration = const Duration(seconds: 3),
     this.showProgressBar = false,
     this.progressColor = const Color(0x80FFFFFF),
+    this.showLeadingIcon = true,
+    this.showCloseIcon = true,
   });
 
   /// The background color of the toast.
@@ -38,6 +40,12 @@ class ToastItemOptions {
   /// defaults to a semi-transparent textColor if not specified.
   final Color progressColor;
 
+  /// Whether to show the leading icon in the toast. Defaults to true.
+  final bool showLeadingIcon;
+
+  /// Whether to show a close icon in the toast. Defaults to false.
+  final bool showCloseIcon;
+
   ToastItemOptions copyWith({
     Color? backgroundColor,
     TextStyle? titleTextStyle,
@@ -47,6 +55,8 @@ class ToastItemOptions {
     Duration? dismissDuration,
     bool? showProgressBar,
     Color? progressColor,
+    bool? showLeadingIcon,
+    bool? showCloseIcon,
   }) {
     return ToastItemOptions(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -57,6 +67,8 @@ class ToastItemOptions {
       dismissDuration: dismissDuration ?? this.dismissDuration,
       showProgressBar: showProgressBar ?? this.showProgressBar,
       progressColor: progressColor ?? this.progressColor,
+      showLeadingIcon: showLeadingIcon ?? this.showLeadingIcon,
+      showCloseIcon: showCloseIcon ?? this.showCloseIcon,
     );
   }
 }
