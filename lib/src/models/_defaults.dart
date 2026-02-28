@@ -17,47 +17,80 @@ const alignmentMap = {
 final defaultItemOptions = {
   ToastType.success: ToastItemOptions(
     backgroundColor: Assets.successColor,
-    textColor: Colors.white,
+    titleTextStyle: TextStyle(
+      fontSize: 14,
+      color: Colors.white,
+      fontWeight: FontWeight.w500,
+    ),
+    contentTextStyle: TextStyle(fontSize: 12, color: Colors.white),
     icon: SvgPicture.asset(
       Assets.successIcon,
       width: 24,
       height: 24,
       package: 'flutter_toasty',
     ),
+    showProgressBar: false,
+    progressColor: const Color(0x80FFFFFF),
   ),
   ToastType.error: ToastItemOptions(
     backgroundColor: Assets.errorColor,
-    textColor: Colors.white,
+    titleTextStyle: TextStyle(
+      fontSize: 14,
+      color: Colors.white,
+      fontWeight: FontWeight.w500,
+    ),
+    contentTextStyle: TextStyle(fontSize: 12, color: Colors.white),
     icon: SvgPicture.asset(
       Assets.errorIcon,
       width: 24,
       height: 24,
       package: 'flutter_toasty',
     ),
+    showProgressBar: false,
+    progressColor: const Color(0x80FFFFFF),
   ),
   ToastType.info: ToastItemOptions(
     backgroundColor: Assets.infoColor,
-    textColor: Colors.white,
+    titleTextStyle: TextStyle(
+      fontSize: 14,
+      color: Colors.white,
+      fontWeight: FontWeight.w500,
+    ),
+    contentTextStyle: TextStyle(fontSize: 12, color: Colors.white),
     icon: SvgPicture.asset(
       Assets.infoIcon,
       width: 24,
       height: 24,
       package: 'flutter_toasty',
     ),
+    showProgressBar: false,
+    progressColor: const Color(0x80FFFFFF),
   ),
   ToastType.warning: ToastItemOptions(
     backgroundColor: Assets.warningColor,
-    textColor: Colors.white,
+    titleTextStyle: TextStyle(
+      fontSize: 14,
+      color: Colors.white,
+      fontWeight: FontWeight.w500,
+    ),
+    contentTextStyle: TextStyle(fontSize: 12, color: Colors.white),
     icon: SvgPicture.asset(
       Assets.warningIcon,
       width: 24,
       height: 24,
       package: 'flutter_toasty',
     ),
+    showProgressBar: false,
+    progressColor: const Color(0x80FFFFFF),
   ),
   ToastType.custom: ToastItemOptions(
     backgroundColor: Colors.white,
-    textColor: Colors.black,
+    titleTextStyle: TextStyle(
+      fontSize: 14,
+      color: Colors.black,
+      fontWeight: FontWeight.w500,
+    ),
+    contentTextStyle: TextStyle(fontSize: 12, color: Colors.black),
     icon: const SizedBox.shrink(),
   ),
 };

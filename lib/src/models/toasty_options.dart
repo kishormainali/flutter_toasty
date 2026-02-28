@@ -4,19 +4,23 @@ import 'package:flutter_toasty/src/models/enums.dart';
 class ToastItemOptions {
   const ToastItemOptions({
     this.backgroundColor = Colors.white,
-    this.textColor = Colors.black,
+    this.titleTextStyle,
+    this.contentTextStyle,
     this.icon = const SizedBox.shrink(),
     this.autoDismiss = true,
     this.dismissDuration = const Duration(seconds: 3),
     this.showProgressBar = false,
-    this.progressColor,
+    this.progressColor = const Color(0x80FFFFFF),
   });
 
   /// The background color of the toast.
   final Color backgroundColor;
 
-  /// The color of the text content in the toast.
-  final Color textColor;
+  /// text style of the title of the toast.
+  final TextStyle? titleTextStyle;
+
+  /// text style of the content of the toast.
+  final TextStyle? contentTextStyle;
 
   /// The icon widget to display in the toast.
   final Widget icon;
@@ -32,11 +36,12 @@ class ToastItemOptions {
 
   /// The color of the progress bar (if shown) in the toast.
   /// defaults to a semi-transparent textColor if not specified.
-  final Color? progressColor;
+  final Color progressColor;
 
   ToastItemOptions copyWith({
     Color? backgroundColor,
-    Color? textColor,
+    TextStyle? titleTextStyle,
+    TextStyle? contentTextStyle,
     Widget? icon,
     bool? autoDismiss,
     Duration? dismissDuration,
@@ -45,7 +50,8 @@ class ToastItemOptions {
   }) {
     return ToastItemOptions(
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      textColor: textColor ?? this.textColor,
+      titleTextStyle: titleTextStyle ?? this.titleTextStyle,
+      contentTextStyle: contentTextStyle ?? this.contentTextStyle,
       icon: icon ?? this.icon,
       autoDismiss: autoDismiss ?? this.autoDismiss,
       dismissDuration: dismissDuration ?? this.dismissDuration,

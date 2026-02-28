@@ -1,39 +1,84 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# Flutter Toasty
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A customizable toast notification library for Flutter.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Info, Success, Warning, Error, and Custom toasts
+- Progress bar support
+- Actions and callbacks
+- Accessibility announcements
+- Highly configurable appearance and behavior
 
-## Getting started
+## Installation
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Add to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  flutter_toasty: ^latest
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+Wrap your app with `ToastyProvider`:
 
 ```dart
-const like = 'sample';
+import 'package:flutter/material.dart';
+import 'package:flutter_toasty/flutter_toasty.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ToastyProvider(
+      child: MaterialApp(
+        home: HomePage(),
+      ),
+    );
+  }
+}
 ```
 
-## Additional information
+Show a toast anywhere in your app:
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```dart
+FlutterToasty.info('This is an info toast!');
+FlutterToasty.success('Operation successful!', title: 'Success');
+FlutterToasty.warning('Be careful!', onClick: () => print('Toast clicked'));
+FlutterToasty.error('Something went wrong.', onClose: () => print('Toast closed'));
+```
+
+## Example
+
+```dart
+ElevatedButton(
+  onPressed: () {
+    FlutterToasty.info('Hello, World!');
+  },
+  child: const Text('Show Info Toast'),
+)
+```
+
+See the `example/` folder for a complete demo app.
+
+## Customization
+
+You can customize toasts globally via `ToastyProvider` or per-toast using options:
+
+```dart
+FlutterToasty.info(
+  'Custom duration and progress',
+  dismissDuration: Duration(seconds: 5),
+  showProgressBar: true,
+);
+```
+
+## License
+
+MIT

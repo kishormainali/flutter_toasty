@@ -88,7 +88,7 @@ class ToastManager {
   ) {
     ToastItemOptions? options = _defaultOptions.itemOptions?[type];
     options ??= defaultItemOptions[type];
-    title ??= type.name.toUpperCase();
+    title ??= type.name.capitalize;
     return (options: options, title: title);
   }
 
@@ -112,7 +112,7 @@ class ToastManager {
     final toast = ToastItem(
       id: id,
       message: message,
-      title: title ?? type.name.toUpperCase(),
+      title: title ?? type.name.capitalize,
       child: child,
       onClick: onClick,
       onClose: onClose,
@@ -158,6 +158,8 @@ class ToastManager {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     final resolved = _getOptionsAndTitle(ToastType.info, title);
     return _show(
@@ -169,6 +171,8 @@ class ToastManager {
       options: resolved.options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
+        showProgressBar: showProgressBar,
+        progressColor: progressColor,
       ),
     );
   }
@@ -181,6 +185,8 @@ class ToastManager {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     final resolved = _getOptionsAndTitle(ToastType.success, title);
     return _show(
@@ -192,6 +198,8 @@ class ToastManager {
       options: resolved.options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
+        showProgressBar: showProgressBar,
+        progressColor: progressColor,
       ),
     );
   }
@@ -204,6 +212,8 @@ class ToastManager {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     final resolved = _getOptionsAndTitle(ToastType.warning, title);
     return _show(
@@ -215,6 +225,8 @@ class ToastManager {
       options: resolved.options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
+        showProgressBar: showProgressBar,
+        progressColor: progressColor,
       ),
     );
   }
@@ -227,6 +239,8 @@ class ToastManager {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     final resolved = _getOptionsAndTitle(ToastType.error, title);
     return _show(
@@ -238,6 +252,8 @@ class ToastManager {
       options: resolved.options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
+        showProgressBar: showProgressBar,
+        progressColor: progressColor,
       ),
     );
   }
@@ -303,5 +319,12 @@ class ToastManager {
       toast.onClose?.call();
     }
     _toasts.value = const [];
+  }
+}
+
+extension _StringX on String {
+  String get capitalize {
+    final lower = toLowerCase();
+    return '${lower[0].toUpperCase()}${lower.substring(1)}';
   }
 }

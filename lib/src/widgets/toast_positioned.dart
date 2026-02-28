@@ -46,7 +46,7 @@ class ToastPositioned extends StatelessWidget {
 
       return AnimatedPositioned(
         key: ValueKey(toast.id),
-        curve: Curves.easeInCubic,
+        curve: Curves.ease,
         top: isTop ? (reverseIndex * 12.0) : null,
         bottom: isBottom ? (reverseIndex * 12.0) : null,
         left: 0,
@@ -55,9 +55,11 @@ class ToastPositioned extends StatelessWidget {
         child: AnimatedScale(
           scale: 1 - (reverseIndex * 0.05),
           duration: _animationDuration,
+          curve: Curves.ease,
           child: AnimatedOpacity(
             opacity: reverseIndex > 3 ? 0 : 1 - (reverseIndex * 0.2),
             duration: _animationDuration,
+            curve: Curves.ease,
             child: IgnorePointer(
               ignoring: !isActiveToast,
               child: ToastWidget(item: toast, isActive: isActiveToast),

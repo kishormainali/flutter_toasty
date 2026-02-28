@@ -1,19 +1,18 @@
 import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart'; // For SemanticsService
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_toasty/src/_toast_manager.dart';
 import 'package:flutter_toasty/src/assets.dart';
 import 'package:flutter_toasty/src/models/enums.dart';
 import 'package:flutter_toasty/src/models/toast_item.dart';
-import 'package:flutter_toasty/src/models/toasty_options.dart';
 
 class ToastWidget extends StatefulWidget {
   const ToastWidget({super.key, required this.item, required this.isActive});
 
   final ToastItem item;
   final bool isActive;
+
   @override
   ToastWidgetState createState() => ToastWidgetState();
 }
@@ -23,19 +22,24 @@ class ToastWidgetState extends State<ToastWidget>
   late final AnimationController _progressController;
   Timer? _dismissTimer;
 
-  late ToastItemOptions _options;
-  late ToastyOptions _globalOptions;
-
   @override
   void initState() {
     super.initState();
-    _options = widget.item.options;
-    _globalOptions = ToastManager.i.defaultOptions;
     _progressController = AnimationController(
       vsync: this,
-      duration: _options.dismissDuration,
+      duration: widget.item.options.dismissDuration,
     );
     if (widget.isActive) _resumeTimer();
+    // Accessibility: Announce the toast content after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        SemanticsService.sendAnnouncement(
+          View.of(context),
+          '${widget.item.title ?? ""} ${widget.item.message}',
+          TextDirection.ltr,
+        );
+      }
+    });
   }
 
   @override
@@ -44,17 +48,15 @@ class ToastWidgetState extends State<ToastWidget>
     if (widget.isActive != oldWidget.isActive) {
       widget.isActive ? _resumeTimer() : _pauseTimer();
     }
-    if (widget.item.options != oldWidget.item.options) {
-      _options = widget.item.options;
-    }
   }
 
   void _startTimer() {
     final remaining =
-        _options.dismissDuration * (1 - _progressController.value);
-    _dismissTimer = Timer(remaining, () {
-      ToastManager.i.dismiss(widget.item.id);
-    });
+        widget.item.options.dismissDuration * (1 - _progressController.value);
+    _dismissTimer = Timer(
+      remaining,
+      () => ToastManager.i.dismiss(widget.item.id),
+    );
     _progressController.forward(from: _progressController.value);
   }
 
@@ -64,9 +66,12 @@ class ToastWidgetState extends State<ToastWidget>
   }
 
   void _resumeTimer() {
-    if (!_options.autoDismiss) return;
-    if (!widget.isActive) return;
-    if (_options.dismissDuration == Duration.zero) return;
+    final options = widget.item.options;
+    if (!options.autoDismiss ||
+        !widget.isActive ||
+        options.dismissDuration == Duration.zero) {
+      return;
+    }
     _dismissTimer?.cancel();
     _startTimer();
   }
@@ -80,49 +85,55 @@ class ToastWidgetState extends State<ToastWidget>
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: _globalOptions.pauseOnHover ? (_) => _pauseTimer() : null,
-      onExit: _globalOptions.pauseOnHover ? (_) => _resumeTimer() : null,
-      child: GestureDetector(
-        onTap: () {
-          widget.item.onClick?.call();
-          if (_globalOptions.closeOnClick) {
-            ToastManager.i.dismiss(widget.item.id);
-          }
-        },
-        child: RepaintBoundary(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final deviceWidth = MediaQuery.of(context).size.width;
-              final maxWidth = max(0.0, deviceWidth - 32);
-              final effectiveWidth = min(_globalOptions.width, maxWidth);
-              return Container(
-                width: effectiveWidth,
-                decoration: BoxDecoration(
-                  color: _options.backgroundColor,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color(0x1A000000),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+    final theme = Theme.of(context);
+    final snackBarTheme = theme.snackBarTheme;
+    final globalOptions = ToastManager.i.defaultOptions;
+    final options = widget.item.options;
+
+    final backgroundColor = options.backgroundColor;
+
+    return Semantics(
+      // liveRegion: true tells screen readers to announce this immediately
+      liveRegion: true,
+      container: true,
+      focused: true,
+      label: 'Notification',
+      child: MouseRegion(
+        onEnter: globalOptions.pauseOnHover ? (_) => _pauseTimer() : null,
+        onExit: globalOptions.pauseOnHover ? (_) => _resumeTimer() : null,
+        child: GestureDetector(
+          onTap: () {
+            widget.item.onClick?.call();
+            if (globalOptions.closeOnClick) {
+              ToastManager.i.dismiss(widget.item.id);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: globalOptions.width),
+              child: Material(
+                elevation: snackBarTheme.elevation ?? 6.0,
+                color: backgroundColor,
+                shape:
+                    snackBarTheme.shape ??
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-                clipBehavior: .antiAlias,
+                clipBehavior: Clip.antiAlias,
                 child: Column(
-                  mainAxisSize: .min,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _ToastContent(item: widget.item, options: _options),
-                    if (_options.showProgressBar)
+                    _ToastContent(item: widget.item),
+                    if (options.showProgressBar)
                       _ProgressBar(
                         controller: _progressController,
-                        color: _options.progressColor ?? _options.textColor,
+                        color: options.progressColor,
                       ),
                   ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
         ),
       ),
@@ -131,73 +142,97 @@ class ToastWidgetState extends State<ToastWidget>
 }
 
 class _ToastContent extends StatelessWidget {
-  const _ToastContent({required this.item, required this.options});
-
+  const _ToastContent({required this.item});
   final ToastItem item;
-  final ToastItemOptions options;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final snackBarTheme = theme.snackBarTheme;
+    final options = item.options;
+
+    final TextStyle defaultStyle =
+        snackBarTheme.contentTextStyle ??
+        TextStyle(color: theme.colorScheme.onInverseSurface);
+
     if (item.type == ToastType.custom && item.child != null) {
-      return Padding(padding: const EdgeInsets.all(16), child: item.child!);
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: DefaultTextStyle(
+          style: options.contentTextStyle ?? defaultStyle,
+          child: item.child!,
+        ),
+      );
     }
+
     return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: item.title == null ? .center : .start,
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          options.icon,
-          if (options.icon is! SizedBox) const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisSize: .min,
-              crossAxisAlignment: .start,
-              children: [
-                if (item.title != null)
-                  Text(
-                    item.title!,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: options.textColor,
-                    ),
-                  ),
-                if (item.title != null) const SizedBox(height: 4),
-                Text(
-                  item.message,
-                  style: TextStyle(fontSize: 14, color: options.textColor),
-                ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (options.icon is! SizedBox) ...[
+                ExcludeSemantics(
+                  child: options.icon,
+                ), // Don't read decorative icons
+                const SizedBox(width: 12),
               ],
-            ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (item.title != null)
+                      Text(
+                        item.title!,
+                        style:
+                            options.titleTextStyle ??
+                            defaultStyle.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    Text(
+                      item.message,
+                      style: options.contentTextStyle ?? defaultStyle,
+                    ),
+                  ],
+                ),
+              ),
+              _CloseButton(id: item.id, color: defaultStyle.color),
+            ],
           ),
-          CloseIcon(id: item.id),
         ],
       ),
     );
   }
 }
 
-class CloseIcon extends StatelessWidget {
-  const CloseIcon({super.key, required this.id});
+class _CloseButton extends StatelessWidget {
+  const _CloseButton({required this.id, this.color});
   final String id;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => ToastManager.i.dismiss(id),
-        child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: SvgPicture.asset(
-            Assets.closeIcon,
-            package: 'flutter_toasty',
-            width: 16,
-            height: 16,
-          ),
+    return Semantics(
+      label: 'Dismiss notification',
+      button: true,
+      child: IconButton(
+        tooltip: 'Dismiss', // Accessibility: Long-press tooltip
+        constraints: const BoxConstraints(),
+        padding: const EdgeInsets.all(8),
+        visualDensity: VisualDensity.compact,
+        icon: SvgPicture.asset(
+          Assets.closeIcon,
+          package: 'flutter_toasty',
+          width: 18,
+          height: 18,
+          colorFilter: color != null
+              ? ColorFilter.mode(color!.withValues(alpha: 0.6), BlendMode.srcIn)
+              : null,
         ),
+        onPressed: () => ToastManager.i.dismiss(id),
       ),
     );
   }
@@ -210,19 +245,24 @@ class _ProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: controller,
-        builder: (context, child) {
-          return LinearProgressIndicator(
-            value: 1 - controller.value,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              color.withValues(alpha: 0.4),
-            ),
-            backgroundColor: Colors.transparent,
-            minHeight: 4,
-          );
-        },
+    // Progress bars for toasts are decorative/timing based,
+    // we hide them from Semantics to avoid cluttering screen reader focus.
+    return ExcludeSemantics(
+      child: RepaintBoundary(
+        child: SizedBox(
+          height: 3,
+          child: AnimatedBuilder(
+            animation: controller,
+            builder: (context, _) {
+              return LinearProgressIndicator(
+                value: 1 - controller.value,
+                backgroundColor: color.withValues(alpha: 0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+                minHeight: 3,
+              );
+            },
+          ),
+        ),
       ),
     );
   }

@@ -106,6 +106,8 @@ class ToastyProviderState extends State<ToastyProvider> {
               final toasts = _lastToastsPerPosition[pos] ?? [];
               if (toasts.isEmpty) return const SizedBox.shrink();
               return SafeArea(
+                top: pos.isBottom,
+                bottom: pos.isTop,
                 child: ToastPositioned(position: pos, toasts: toasts),
               );
             },

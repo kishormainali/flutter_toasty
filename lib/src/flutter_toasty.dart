@@ -24,6 +24,9 @@ class FlutterToasty {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    List<Widget> actions = const [],
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     return _manager.info(
       message,
@@ -32,6 +35,8 @@ class FlutterToasty {
       onClose: onClose,
       autoDismiss: autoDismiss,
       dismissDuration: dismissDuration,
+      showProgressBar: showProgressBar,
+      progressColor: progressColor,
     );
   }
 
@@ -43,6 +48,8 @@ class FlutterToasty {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     return _manager.success(
       message,
@@ -51,6 +58,8 @@ class FlutterToasty {
       onClose: onClose,
       autoDismiss: autoDismiss,
       dismissDuration: dismissDuration,
+      showProgressBar: showProgressBar,
+      progressColor: progressColor,
     );
   }
 
@@ -62,6 +71,8 @@ class FlutterToasty {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     return _manager.warning(
       message,
@@ -70,6 +81,8 @@ class FlutterToasty {
       onClose: onClose,
       autoDismiss: autoDismiss,
       dismissDuration: dismissDuration,
+      showProgressBar: showProgressBar,
+      progressColor: progressColor,
     );
   }
 
@@ -81,6 +94,8 @@ class FlutterToasty {
     void Function()? onClose,
     bool autoDismiss = true,
     Duration dismissDuration = const Duration(seconds: 3),
+    bool showProgressBar = false,
+    Color? progressColor,
   }) {
     return _manager.error(
       message,
@@ -89,6 +104,8 @@ class FlutterToasty {
       onClose: onClose,
       autoDismiss: autoDismiss,
       dismissDuration: dismissDuration,
+      showProgressBar: showProgressBar,
+      progressColor: progressColor,
     );
   }
 
