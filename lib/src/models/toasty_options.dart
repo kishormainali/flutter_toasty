@@ -13,6 +13,7 @@ class ToastItemOptions {
     this.progressColor = const Color(0x80FFFFFF),
     this.showLeadingIcon = true,
     this.showCloseIcon = true,
+    this.shape,
   });
 
   /// The background color of the toast.
@@ -46,6 +47,9 @@ class ToastItemOptions {
   /// Whether to show a close icon in the toast. Defaults to false.
   final bool showCloseIcon;
 
+  /// The shape of the toast. If null, it will use the default shape based on the theme.
+  final ShapeBorder? shape;
+
   ToastItemOptions copyWith({
     Color? backgroundColor,
     TextStyle? titleTextStyle,
@@ -57,6 +61,7 @@ class ToastItemOptions {
     Color? progressColor,
     bool? showLeadingIcon,
     bool? showCloseIcon,
+    ShapeBorder? shape,
   }) {
     return ToastItemOptions(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -69,6 +74,7 @@ class ToastItemOptions {
       progressColor: progressColor ?? this.progressColor,
       showLeadingIcon: showLeadingIcon ?? this.showLeadingIcon,
       showCloseIcon: showCloseIcon ?? this.showCloseIcon,
+      shape: shape ?? this.shape,
     );
   }
 }

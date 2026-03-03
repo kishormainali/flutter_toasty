@@ -91,6 +91,10 @@ class ToastWidgetState extends State<ToastWidget>
     final options = widget.item.options;
 
     final backgroundColor = options.backgroundColor;
+    final resolvedShape =
+        options.shape ??
+        snackBarTheme.shape ??
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
 
     return Semantics(
       // liveRegion: true tells screen readers to announce this immediately
@@ -115,11 +119,7 @@ class ToastWidgetState extends State<ToastWidget>
               child: Material(
                 elevation: snackBarTheme.elevation ?? 6.0,
                 color: backgroundColor,
-                shape:
-                    snackBarTheme.shape ??
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                shape: resolvedShape,
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -151,15 +151,24 @@ class _ToastContent extends StatelessWidget {
     final snackBarTheme = theme.snackBarTheme;
     final options = item.options;
 
-    final TextStyle defaultStyle =
+    final TextStyle resolvedContentTextStyle =
+        options.contentTextStyle ??
         snackBarTheme.contentTextStyle ??
         TextStyle(color: theme.colorScheme.onInverseSurface);
+
+    final TextStyle resolvedTitleTextStyle =
+        options.titleTextStyle ??
+        snackBarTheme.contentTextStyle?.copyWith(fontWeight: FontWeight.bold) ??
+        TextStyle(
+          color: theme.colorScheme.onInverseSurface,
+          fontWeight: FontWeight.bold,
+        );
 
     if (item.type == ToastType.custom && item.child != null) {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: DefaultTextStyle(
-          style: options.contentTextStyle ?? defaultStyle,
+          style: resolvedContentTextStyle,
           child: item.child!,
         ),
       );
@@ -172,7 +181,8 @@ class _ToastContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: .start,
+            mainAxisAlignment: .start,
             children: [
               if (options.icon is! SizedBox && options.showLeadingIcon) ...[
                 ExcludeSemantics(
@@ -182,25 +192,25 @@ class _ToastContent extends StatelessWidget {
               ],
               Expanded(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: .min,
+                  crossAxisAlignment: .start,
+                  mainAxisAlignment: .start,
                   children: [
-                    if (item.title != null)
-                      Text(
-                        item.title!,
-                        style:
-                            options.titleTextStyle ??
-                            defaultStyle.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    Text(
-                      item.message,
-                      style: options.contentTextStyle ?? defaultStyle,
-                    ),
+                    if (item.title != null) ...[
+                      Text(item.title!, style: resolvedTitleTextStyle),
+                      const SizedBox(height: 4),
+                    ],
+                    Text(item.message, style: resolvedContentTextStyle),
                   ],
                 ),
               ),
               if (options.showCloseIcon)
-                _CloseButton(id: item.id, color: defaultStyle.color),
+                Center(
+                  child: _CloseButton(
+                    id: item.id,
+                    color: resolvedContentTextStyle.color,
+                  ),
+                ),
             ],
           ),
         ],
@@ -221,9 +231,8 @@ class _CloseButton extends StatelessWidget {
       button: true,
       child: IconButton(
         tooltip: 'Dismiss', // Accessibility: Long-press tooltip
-        constraints: const BoxConstraints(),
-        padding: const EdgeInsets.all(8),
         visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.all(8),
         icon: SvgPicture.asset(
           Assets.closeIcon,
           package: 'flutter_toasty',

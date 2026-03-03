@@ -50,9 +50,11 @@ class ToastManager {
   /// The default options for toasts, which can be overridden by individual toast options.
   /// This includes settings like position, auto-close duration, and styling.
   /// These defaults are used when showing a toast without specific options provided.
-  ToastyOptions _defaultOptions = ToastyOptions();
+  ToastyOptions _defaultOptions = defaultToastyOptions;
 
   ToastyOptions get defaultOptions => _defaultOptions;
+
+  Map<ToastType, ToastItemOptions> _defaultItemOptions = defaultItemOptions;
 
   /// The list of currently displayed toasts, managed as a
   ///  ValueNotifier to allow for reactive updates in the UI.
@@ -78,18 +80,8 @@ class ToastManager {
   /// while [maxToasts] sets the maximum number of toasts that can be displayed
   void configure({ToastyOptions? options, int? maxToasts}) {
     _defaultOptions = options ?? defaultToastyOptions;
+    _defaultItemOptions = _defaultOptions.itemOptions ?? defaultItemOptions;
     _maxToasts = maxToasts ?? _maxToasts;
-  }
-
-  /// Helper method to get the options and title for a given toast type.
-  ({ToastItemOptions? options, String title}) _getOptionsAndTitle(
-    ToastType type,
-    String? title,
-  ) {
-    ToastItemOptions? options = _defaultOptions.itemOptions?[type];
-    options ??= defaultItemOptions[type];
-    title ??= type.name.capitalize;
-    return (options: options, title: title);
   }
 
   /// Shows a new toast with the given message and options.
@@ -106,7 +98,7 @@ class ToastManager {
     ToastItemOptions? options,
     ToastPosition? position,
   }) {
-    options ??= _defaultOptions.itemOptions?[type] ?? ToastItemOptions();
+    final resolvedOptions = options ?? _defaultItemOptions[type];
     final id = _generateId();
     position ??= _defaultOptions.position;
     final toast = ToastItem(
@@ -116,7 +108,7 @@ class ToastManager {
       child: child,
       onClick: onClick,
       onClose: onClose,
-      options: options,
+      options: resolvedOptions!,
       position: position,
       type: type,
     );
@@ -161,14 +153,14 @@ class ToastManager {
     bool showProgressBar = false,
     Color? progressColor,
   }) {
-    final resolved = _getOptionsAndTitle(ToastType.info, title);
+    final options = _defaultItemOptions[ToastType.info];
     return _show(
       message,
       type: ToastType.info,
-      title: resolved.title,
+      title: title,
       onClick: onClick,
       onClose: onClose,
-      options: resolved.options?.copyWith(
+      options: options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
         showProgressBar: showProgressBar,
@@ -188,14 +180,14 @@ class ToastManager {
     bool showProgressBar = false,
     Color? progressColor,
   }) {
-    final resolved = _getOptionsAndTitle(ToastType.success, title);
+    final options = _defaultItemOptions[ToastType.success];
     return _show(
       message,
       type: ToastType.success,
-      title: resolved.title,
+      title: title,
       onClick: onClick,
       onClose: onClose,
-      options: resolved.options?.copyWith(
+      options: options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
         showProgressBar: showProgressBar,
@@ -215,14 +207,14 @@ class ToastManager {
     bool showProgressBar = false,
     Color? progressColor,
   }) {
-    final resolved = _getOptionsAndTitle(ToastType.warning, title);
+    final options = _defaultItemOptions[ToastType.warning];
     return _show(
       message,
       type: ToastType.warning,
-      title: resolved.title,
+      title: title,
       onClick: onClick,
       onClose: onClose,
-      options: resolved.options?.copyWith(
+      options: options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
         showProgressBar: showProgressBar,
@@ -242,14 +234,14 @@ class ToastManager {
     bool showProgressBar = false,
     Color? progressColor,
   }) {
-    final resolved = _getOptionsAndTitle(ToastType.error, title);
+    final options = _defaultItemOptions[ToastType.error];
     return _show(
       message,
       type: ToastType.error,
-      title: resolved.title,
+      title: title,
       onClick: onClick,
       onClose: onClose,
-      options: resolved.options?.copyWith(
+      options: options?.copyWith(
         autoDismiss: autoDismiss,
         dismissDuration: dismissDuration,
         showProgressBar: showProgressBar,

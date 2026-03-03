@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 - 2026-03-03
+
+- Added support for custom shapes for toasts
+- Improvements
+
 ## 1.0.1 - 2026-02-28
 
 - Updated docs
