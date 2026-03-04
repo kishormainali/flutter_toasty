@@ -104,7 +104,7 @@ class ToastManager {
     final toast = ToastItem(
       id: id,
       message: message,
-      title: title ?? type.name.capitalize,
+      title: title,
       child: child,
       onClick: onClick,
       onClose: onClose,
@@ -311,12 +311,5 @@ class ToastManager {
       toast.onClose?.call();
     }
     _toasts.value = const [];
-  }
-}
-
-extension _StringX on String {
-  String get capitalize {
-    final lower = toLowerCase();
-    return '${lower[0].toUpperCase()}${lower.substring(1)}';
   }
 }

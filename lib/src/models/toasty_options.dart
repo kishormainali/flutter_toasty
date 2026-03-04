@@ -14,6 +14,7 @@ class ToastItemOptions {
     this.showLeadingIcon = true,
     this.showCloseIcon = true,
     this.shape,
+    this.centerIcon = false,
   });
 
   /// The background color of the toast.
@@ -27,6 +28,9 @@ class ToastItemOptions {
 
   /// The icon widget to display in the toast.
   final Widget icon;
+
+  /// Whether to center the icon vertically with the text. Defaults to false (top-aligned).
+  final bool centerIcon;
 
   /// Whether the toast should automatically dismiss after a certain duration. Defaults to true.
   final bool autoDismiss;
@@ -62,6 +66,7 @@ class ToastItemOptions {
     bool? showLeadingIcon,
     bool? showCloseIcon,
     ShapeBorder? shape,
+    bool? centerIcon,
   }) {
     return ToastItemOptions(
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -75,6 +80,7 @@ class ToastItemOptions {
       showLeadingIcon: showLeadingIcon ?? this.showLeadingIcon,
       showCloseIcon: showCloseIcon ?? this.showCloseIcon,
       shape: shape ?? this.shape,
+      centerIcon: centerIcon ?? this.centerIcon,
     );
   }
 }

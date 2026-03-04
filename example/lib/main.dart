@@ -23,13 +23,17 @@ class App extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    FlutterToasty.info('Hello, World!');
+                    FlutterToasty.info(
+                      'Hello, World!',
+                      title: 'Hello',
+                      autoDismiss: false,
+                    );
                   },
                   child: const Text('Show Info Toast'),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    FlutterToasty.success('Hello, World!');
+                    FlutterToasty.success('Hello, World!', title: 'Hello');
                   },
                   child: const Text('Show Success Toast'),
                 ),

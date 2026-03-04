@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3 - 2026-03-04
+
+- Added support for center icon alignment in toasts
+
 ## 1.0.2 - 2026-03-03
 
 - Added support for custom shapes for toasts

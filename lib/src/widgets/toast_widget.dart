@@ -151,6 +151,11 @@ class _ToastContent extends StatelessWidget {
     final snackBarTheme = theme.snackBarTheme;
     final options = item.options;
 
+    CrossAxisAlignment contentAlignment = .start;
+    if (options.centerIcon || item.title == null) {
+      contentAlignment = .center;
+    }
+
     final TextStyle resolvedContentTextStyle =
         options.contentTextStyle ??
         snackBarTheme.contentTextStyle ??
@@ -162,6 +167,7 @@ class _ToastContent extends StatelessWidget {
         TextStyle(
           color: theme.colorScheme.onInverseSurface,
           fontWeight: FontWeight.bold,
+          fontSize: 15,
         );
 
     if (item.type == ToastType.custom && item.child != null) {
@@ -175,44 +181,35 @@ class _ToastContent extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        crossAxisAlignment: contentAlignment,
         children: [
-          Row(
-            crossAxisAlignment: .start,
-            mainAxisAlignment: .start,
-            children: [
-              if (options.icon is! SizedBox && options.showLeadingIcon) ...[
-                ExcludeSemantics(
-                  child: options.icon,
-                ), // Don't read decorative icons
-                const SizedBox(width: 12),
+          if (options.showLeadingIcon && options.icon is! SizedBox)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: ExcludeSemantics(child: options.icon),
+            ),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: .start,
+              mainAxisAlignment: options.centerIcon ? .center : .start,
+              children: [
+                if (item.title != null)
+                  Text(item.title!, style: resolvedTitleTextStyle),
+                Text(item.message, style: resolvedContentTextStyle),
               ],
-              Expanded(
-                child: Column(
-                  mainAxisSize: .min,
-                  crossAxisAlignment: .start,
-                  mainAxisAlignment: .start,
-                  children: [
-                    if (item.title != null) ...[
-                      Text(item.title!, style: resolvedTitleTextStyle),
-                      const SizedBox(height: 4),
-                    ],
-                    Text(item.message, style: resolvedContentTextStyle),
-                  ],
-                ),
-              ),
-              if (options.showCloseIcon)
-                Center(
-                  child: _CloseButton(
-                    id: item.id,
-                    color: resolvedContentTextStyle.color,
-                  ),
-                ),
-            ],
+            ),
           ),
+          if (options.showCloseIcon)
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: _CloseButton(
+                id: item.id,
+                color: resolvedContentTextStyle.color,
+              ),
+            ),
         ],
       ),
     );
@@ -229,20 +226,31 @@ class _CloseButton extends StatelessWidget {
     return Semantics(
       label: 'Dismiss notification',
       button: true,
-      child: IconButton(
-        tooltip: 'Dismiss', // Accessibility: Long-press tooltip
-        visualDensity: VisualDensity.compact,
-        padding: EdgeInsets.all(8),
-        icon: SvgPicture.asset(
-          Assets.closeIcon,
-          package: 'flutter_toasty',
-          width: 18,
-          height: 18,
-          colorFilter: color != null
-              ? ColorFilter.mode(color!.withValues(alpha: 0.6), BlendMode.srcIn)
-              : null,
+      child: Material(
+        shape: const CircleBorder(),
+        color: Colors.transparent,
+        clipBehavior: Clip.antiAlias,
+        child: Tooltip(
+          message: 'Dismiss', // Accessibility: Long-press tooltip
+          child: InkWell(
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: SvgPicture.asset(
+                Assets.closeIcon,
+                package: 'flutter_toasty',
+                width: 18,
+                height: 18,
+                colorFilter: color != null
+                    ? ColorFilter.mode(
+                        color!.withValues(alpha: 0.6),
+                        BlendMode.srcIn,
+                      )
+                    : null,
+              ),
+            ),
+            onTap: () => ToastManager.i.dismiss(id),
+          ),
         ),
-        onPressed: () => ToastManager.i.dismiss(id),
       ),
     );
   }
