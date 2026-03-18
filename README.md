@@ -21,7 +21,7 @@ dependencies:
 
 ## Usage
 
-Wrap your app with `ToastyProvider`:
+Place `ToastyProvider` in the `builder` of your `MaterialApp`, `CupertinoApp`, or `WidgetsApp`. This approach works seamlessly with routing solutions like `go_router`:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -36,13 +36,48 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ToastyProvider(
-      child: MaterialApp(
-        home: HomePage(),
+    return MaterialApp(
+      home: const HomePage(),
+      builder: (context, child) => ToastyProvider(
+        child: child!,
       ),
     );
   }
 }
+```
+
+**With Routing Solutions (go_router, auto_route, etc.):**
+
+```dart
+return MaterialApp.router(
+  routerConfig: router, // Your routing configuration
+  builder: (context, child) => ToastyProvider(
+    child: child!,
+  ),
+);
+```
+
+**IMPORTANT:** `ToastyProvider` MUST be placed:
+
+- ✅ In the `builder` parameter of MaterialApp/CupertinoApp/WidgetsApp
+- ✅ NOT as a wrapper around the app widget
+- ✅ This ensures access to Material context (Theme, Localizations, Direction, MediaQuery)
+
+❌ **WRONG:**
+
+```dart
+return ToastyProvider(
+  child: MaterialApp(...),
+);
+```
+
+✅ **CORRECT:**
+
+```dart
+return MaterialApp(
+  home: const HomePage(),
+  builder: (context, child) => ToastyProvider(child: child!),
+);
 ```
 
 Show a toast anywhere in your app:
@@ -54,22 +89,58 @@ FlutterToasty.warning('Be careful!', onClick: () => print('Toast clicked'));
 FlutterToasty.error('Something went wrong.', onClose: () => print('Toast closed'));
 ```
 
-## Example
+## Toast Types and Positions
+
+### Available Toast Types
+
+- `info` - Informational message
+- `success` - Success notification
+- `warning` - Warning message
+- `error` - Error notification
+- `custom` - Fully customizable toast
+
+### Available Positions
+
+- `topLeft`, `topCenter`, `topRight`
+- `bottomLeft`, `bottomCenter`, `bottomRight`
 
 ```dart
-ElevatedButton(
-  onPressed: () {
-    FlutterToasty.info('Hello, World!');
-  },
-  child: const Text('Show Info Toast'),
-)
-```
+FlutterToasty.info(
+  'Top center toast',
+  position: ToastPosition.topCenter,
+);
 
-See the `example/` folder for a complete demo app.
+FlutterToasty.warning(
+  'Bottom right warning',
+  position: ToastPosition.bottomRight,
+);
+```
 
 ## Customization
 
-You can customize toasts globally via `ToastyProvider` or per-toast using options:
+### Global Configuration
+
+Customize all toasts via `ToastyProvider`:
+
+```dart
+MaterialApp(
+  home: const HomePage(),
+  builder: (context, child) => ToastyProvider(
+    options: ToastyOptions(
+      position: ToastPosition.topCenter,
+      pauseOnHover: true,
+      closeOnClick: true,
+      dismissDuration: const Duration(seconds: 5),
+    ),
+    maxToasts: 3,
+    child: child!,
+  ),
+)
+```
+
+### Per-Toast Customization
+
+Customize individual toasts:
 
 ```dart
 FlutterToasty.info(
@@ -77,7 +148,57 @@ FlutterToasty.info(
   dismissDuration: Duration(seconds: 5),
   showProgressBar: true,
 );
+
+FlutterToasty.success(
+  'Operation completed',
+  title: 'Success',
+  autoDismiss: false, // Manual dismissal only
+);
+
+FlutterToasty.custom(
+  child: Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.blue,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: const Text('Custom toast content'),
+  ),
+);
 ```
+
+## Common Issues & Troubleshooting
+
+### "No MaterialLocalizations found" error
+
+**Cause:** `ToastyProvider` must be placed in the `builder` of `MaterialApp`, not as a wrapper around it.
+
+**Solution:**
+
+```dart
+// ✅ Correct
+return MaterialApp(
+  home: const HomePage(),
+  builder: (context, child) => ToastyProvider(child: child!),
+);
+
+// ❌ Wrong
+return ToastyProvider(
+  child: MaterialApp(...),
+);
+```
+
+### Toasts not appearing
+
+**Cause:** ToastyProvider may not be properly placed in the MaterialApp builder or context is unavailable.
+
+**Solution:** Ensure ToastyProvider is in the `builder` parameter of your MaterialApp/CupertinoApp/WidgetsApp, not as a wrapper or home widget.
+
+### Text field double-tap or modal sheet errors
+
+**Cause:** Material context not properly inherited by overlay entries.
+
+**Solution:** This is fixed in the latest version. `ToastyProvider` now properly manages Material context inheritance for all overlay entries, ensuring modals, text selections, and other Material features work correctly with toasts displayed.
 
 ## License
 

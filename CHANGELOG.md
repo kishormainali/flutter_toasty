@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0 - 2026-03-18
+
+- Fixed an issue with toasts not showing in certain contexts by improving overlay state handling and context inheritance.
+- Updated documentation with new examples and troubleshooting tips.
+
 ## 1.0.3 - 2026-03-04
 
 - Added support for center icon alignment in toasts

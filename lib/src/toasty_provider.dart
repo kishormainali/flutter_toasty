@@ -6,6 +6,39 @@ import 'package:flutter_toasty/src/models/toasty_options.dart';
 import 'models/toast_item.dart';
 import 'widgets/toast_positioned.dart';
 
+/// A helper widget that provides Material context to toast content
+/// by inheriting Theme, MediaQuery, and Directionality from the app context
+class _ToastContextProvider extends StatelessWidget {
+  const _ToastContextProvider({
+    required this.materialContext,
+    required this.position,
+    required this.toasts,
+  });
+
+  final BuildContext materialContext;
+  final ToastPosition position;
+  final List<ToastItem> toasts;
+
+  @override
+  Widget build(BuildContext context) {
+    // Inherit all Material theme data from the app context
+    final theme = Theme.of(materialContext);
+    final textDirection = Directionality.of(materialContext);
+
+    return Theme(
+      data: theme,
+      child: Directionality(
+        textDirection: textDirection,
+        child: SafeArea(
+          top: position.isBottom,
+          bottom: position.isTop,
+          child: ToastPositioned(position: position, toasts: toasts),
+        ),
+      ),
+    );
+  }
+}
+
 /// {@template toasty_provider}
 /// A provider widget that manages the display of toasts in the application.
 /// It uses an [Overlay] to display toasts above the main content, and listens to changes in
@@ -47,10 +80,10 @@ class ToastyProvider extends StatefulWidget {
 class ToastyProviderState extends State<ToastyProvider> {
   final GlobalKey<OverlayState> _overlayKey = GlobalKey<OverlayState>();
   late final OverlayEntry _childEntry;
-
   final Map<ToastPosition, OverlayEntry> _toasts = {};
-
   final Map<ToastPosition, List<ToastItem>> _lastToastsPerPosition = {};
+  bool _contextValidated = false;
+  late BuildContext _materialAppContext;
 
   @override
   void initState() {
@@ -62,11 +95,44 @@ class ToastyProviderState extends State<ToastyProvider> {
       maxToasts: widget.maxToasts,
     );
 
-    /// create the overlay entry for the child widget
-    _childEntry = OverlayEntry(builder: (context) => widget.child);
+    /// create the overlay entry for the child widget and capture its context
+    _childEntry = OverlayEntry(
+      builder: (context) {
+        return Builder(
+          builder: (innerContext) {
+            _materialAppContext = innerContext;
+            return widget.child;
+          },
+        );
+      },
+    );
 
     /// Listen changes in the ToastManager and update the toasts accordingly
     ToastManager.i.addToastListener(_updateToasts);
+  }
+
+  void _validateContext() {
+    if (_contextValidated) return;
+
+    try {
+      // Check for required Material context dependencies
+      MediaQuery.of(_materialAppContext);
+      Theme.of(_materialAppContext);
+      Directionality.of(_materialAppContext);
+      _contextValidated = true;
+    } catch (e) {
+      throw FlutterError(
+        'ToastyProvider must be placed inside a MaterialApp, CupertinoApp, or WidgetsApp.\n'
+        'The context does not have access to required material/cupertino/widgets dependencies.\n'
+        'Please ensure your app structure is:\n\n'
+        'ToastyProvider(\n'
+        '  child: MaterialApp(\n'
+        '    home: Scaffold(...),\n'
+        '  ),\n'
+        ')\n\n'
+        'Error details: $e',
+      );
+    }
   }
 
   @override
@@ -83,12 +149,35 @@ class ToastyProviderState extends State<ToastyProvider> {
   }
 
   void _updateToasts(List<ToastItem> toasts) {
+    if (!mounted) return;
+
+    /// Validate context on first toast display
+    try {
+      _validateContext();
+    } catch (e) {
+      debugPrintStack(label: 'ToastyProvider validation error: $e');
+      return;
+    }
+
     final grouped = <ToastPosition, List<ToastItem>>{};
     for (final toast in toasts) {
       grouped.putIfAbsent(toast.position, () => []).add(toast);
     }
 
-    final overlayState = _overlayKey.currentState;
+    // Try to get overlay state from Material app context first (has proper Material context)
+    OverlayState? overlayState;
+    try {
+      overlayState = Overlay.of(_materialAppContext);
+    } catch (e) {
+      try {
+        // Fallback to global overlay key if Material context overlay is not available
+        overlayState = _overlayKey.currentState;
+      } catch (e) {
+        debugPrintStack(label: 'ToastyProvider overlay access error: $e');
+        return;
+      }
+    }
+
     if (overlayState == null) return;
 
     // Remove toasts that are no longer present
@@ -124,18 +213,27 @@ class ToastyProviderState extends State<ToastyProvider> {
           _toasts[pos]?.markNeedsBuild();
         } else {
           final entry = OverlayEntry(
-            builder: (_) {
+            builder: (overlayContext) {
               final toasts = _lastToastsPerPosition[pos] ?? [];
               if (toasts.isEmpty) return const SizedBox.shrink();
-              return SafeArea(
-                top: pos.isBottom,
-                bottom: pos.isTop,
-                child: ToastPositioned(position: pos, toasts: toasts),
+              // Use a custom widget to inherit Material context from the app
+              return _ToastContextProvider(
+                materialContext: _materialAppContext,
+                position: pos,
+                toasts: toasts,
               );
             },
           );
           _toasts[pos] = entry;
-          overlayState.insert(entry);
+          try {
+            overlayState.insert(entry);
+          } catch (e) {
+            debugPrintStack(
+              label:
+                  'ToastyProvider overlay insertion error for position $pos: $e',
+            );
+            _toasts.remove(pos);
+          }
         }
       }
     }
