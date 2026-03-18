@@ -1,6 +1,6 @@
 name: flutter_toasty
 description: "A Flutter package that provides a simple and customizable way to display toast messages in your Flutter applications. With Flutter Toasty, you can easily show informative and stylish toast notifications to enhance user experience and provide feedback on various actions within your app."
-version: 1.0.3
+version: 1.1.0
 homepage: https://github.com/kishormainali/flutter_toasty
 repository: https://github.com/kishormainali/flutter_toasty
 
@@ -12,7 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_svg: ^2.2.3
+  flutter_svg: ^2.2.4
 
 dev_dependencies:
   flutter_test:
