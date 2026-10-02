@@ -54,6 +54,25 @@ class ToastItemOptions {
   /// The shape of the toast. If null, it will use the default shape based on the theme.
   final ShapeBorder? shape;
 
+  /// Returns a copy that takes the visual fields (colors, text styles, icon,
+  /// shape...) from [visuals] and keeps this one's timing/progress fields.
+  ToastItemOptions withVisualsFrom(ToastItemOptions visuals) {
+    return ToastItemOptions(
+      backgroundColor: visuals.backgroundColor,
+      titleTextStyle: visuals.titleTextStyle,
+      contentTextStyle: visuals.contentTextStyle,
+      icon: visuals.icon,
+      showLeadingIcon: visuals.showLeadingIcon,
+      showCloseIcon: visuals.showCloseIcon,
+      shape: visuals.shape,
+      centerIcon: visuals.centerIcon,
+      autoDismiss: autoDismiss,
+      dismissDuration: dismissDuration,
+      showProgressBar: showProgressBar,
+      progressColor: progressColor,
+    );
+  }
+
   ToastItemOptions copyWith({
     Color? backgroundColor,
     TextStyle? titleTextStyle,
@@ -94,7 +113,7 @@ class ToastyOptions {
     this.dismissDuration = const Duration(seconds: 3),
     this.animationCurve = Curves.easeInOut,
     this.animationDuration = const Duration(milliseconds: 300),
-    this.itemOptions,
+    @Deprecated('Use ToastyTheme instead.') this.itemOptions,
   });
 
   final ToastPosition position;
@@ -104,5 +123,11 @@ class ToastyOptions {
   final Duration dismissDuration;
   final Curve animationCurve;
   final Duration animationDuration;
+
+  /// Per-state options.
+  @Deprecated(
+    'Use ToastyTheme (a ThemeData extension) instead; it supports light/dark '
+    'mode and per-state fields.',
+  )
   final Map<ToastType, ToastItemOptions>? itemOptions;
 }

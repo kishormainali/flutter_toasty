@@ -26,11 +26,15 @@ class ToastPositioned extends StatelessWidget {
 
   static const _animationDuration = Duration(milliseconds: 300);
 
+  /// How far each older toast peeks out from behind the one in front.
+  static const _peek = 12.0;
+
+  /// How much narrower each older toast is than the one in front, per side.
+  static const _inset = 10.0;
+
   @override
   Widget build(BuildContext context) {
     final alignment = alignmentMap[position]!;
-    final isTop = position.isTop;
-    final isBottom = position.isBottom;
     final count = toasts.length;
 
     return Align(
@@ -39,44 +43,55 @@ class ToastPositioned extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
+          // The newest toast is the only non-positioned child, so it sizes the
+          // stack. Older toasts are stretched to the newest one's height plus
+          // their peek, so they always show behind it regardless of height.
           child: Stack(
-            alignment: alignment,
-            children: _generateToastItems(isTop, isBottom, count),
+            clipBehavior: Clip.none,
+            children: [
+              for (var index = 0; index < count; index++)
+                _buildToast(index, count),
+            ],
           ),
         ),
       ),
     );
   }
 
-  List<Widget> _generateToastItems(bool isTop, bool isBottom, int count) {
-    return List.generate(count, (index) {
-      final toast = toasts[index];
-      final reverseIndex = count - 1 - index;
-      final isActiveToast = reverseIndex == 0;
+  Widget _buildToast(int index, int count) {
+    final toast = toasts[index];
+    final depth = count - 1 - index;
+    final isFront = depth == 0;
 
-      return AnimatedPositioned(
-        key: ValueKey(toast.id),
-        curve: Curves.ease,
-        top: isTop ? (reverseIndex * 12.0) : null,
-        bottom: isBottom ? (reverseIndex * 12.0) : null,
-        left: 0,
-        right: 0,
+    // A global key keeps each toast's state (timer, progress) when it moves
+    // between the front slot and a positioned slot as toasts come and go.
+    final content = KeyedSubtree(
+      key: GlobalObjectKey(toast.id),
+      child: AnimatedOpacity(
+        opacity: depth > 3 ? 0 : 1 - (depth * 0.2),
         duration: _animationDuration,
-        child: AnimatedScale(
-          scale: 1 - (reverseIndex * 0.05),
-          duration: _animationDuration,
-          curve: Curves.ease,
-          child: AnimatedOpacity(
-            opacity: reverseIndex > 3 ? 0 : 1 - (reverseIndex * 0.2),
-            duration: _animationDuration,
-            curve: Curves.ease,
-            child: IgnorePointer(
-              ignoring: !isActiveToast,
-              child: ToastWidget(item: toast, isActive: isActiveToast),
-            ),
+        curve: Curves.ease,
+        child: IgnorePointer(
+          ignoring: !isFront,
+          child: RepaintBoundary(
+            child: ToastWidget(item: toast, isActive: isFront),
           ),
         ),
-      );
-    });
+      ),
+    );
+
+    if (isFront) return content;
+
+    final extend = -(depth * _peek);
+    return AnimatedPositioned(
+      key: ValueKey(toast.id),
+      duration: _animationDuration,
+      curve: Curves.ease,
+      top: position.isBottom ? extend : 0,
+      bottom: position.isBottom ? 0 : extend,
+      left: depth * _inset,
+      right: depth * _inset,
+      child: content,
+    );
   }
 }

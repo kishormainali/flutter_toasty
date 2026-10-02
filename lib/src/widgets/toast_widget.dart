@@ -5,7 +5,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:flutter_toasty/src/_toast_manager.dart';
 import 'package:flutter_toasty/src/assets.dart';
 import 'package:flutter_toasty/src/models/enums.dart';
+import 'package:flutter_toasty/src/models/toast_data.dart';
 import 'package:flutter_toasty/src/models/toast_item.dart';
+import 'package:flutter_toasty/src/models/toasty_options.dart';
+import 'package:flutter_toasty/src/models/toasty_theme.dart';
 
 class ToastWidget extends StatefulWidget {
   const ToastWidget({super.key, required this.item, required this.isActive});
@@ -88,13 +91,32 @@ class ToastWidgetState extends State<ToastWidget>
     final theme = Theme.of(context);
     final snackBarTheme = theme.snackBarTheme;
     final globalOptions = ToastManager.i.defaultOptions;
-    final options = widget.item.options;
+    final toastyTheme = theme.extension<ToastyTheme>();
+    final options = _resolveOptions(widget.item, toastyTheme);
 
     final backgroundColor = options.backgroundColor;
     final resolvedShape =
         options.shape ??
         snackBarTheme.shape ??
         RoundedRectangleBorder(borderRadius: BorderRadius.circular(8));
+
+    if (!widget.isActive) {
+      // Toasts behind the front one only show as a card peeking out, sized by
+      // the stack. They keep their state (timer progress) but not their
+      // content, so they can't overflow the stretched card.
+      return ExcludeSemantics(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Material(
+            elevation: snackBarTheme.elevation ?? 6.0,
+            color: backgroundColor,
+            shape: resolvedShape,
+            clipBehavior: Clip.antiAlias,
+            child: const SizedBox.expand(),
+          ),
+        ),
+      );
+    }
 
     return Semantics(
       // liveRegion: true tells screen readers to announce this immediately
@@ -124,7 +146,11 @@ class ToastWidgetState extends State<ToastWidget>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _ToastContent(item: widget.item),
+                    _ToastContent(
+                      item: widget.item,
+                      options: options,
+                      builder: toastyTheme?.builder,
+                    ),
                     if (options.showProgressBar)
                       _ProgressBar(
                         controller: _progressController,
@@ -141,15 +167,27 @@ class ToastWidgetState extends State<ToastWidget>
   }
 }
 
+/// Applies the theme's per-type visuals unless the toast has explicit options.
+ToastItemOptions _resolveOptions(ToastItem item, ToastyTheme? theme) {
+  final themed = theme?.optionsFor(item.type);
+  if (item.hasExplicitOptions || themed == null) return item.options;
+  return item.options.withVisualsFrom(themed);
+}
+
 class _ToastContent extends StatelessWidget {
-  const _ToastContent({required this.item});
+  const _ToastContent({
+    required this.item,
+    required this.options,
+    required this.builder,
+  });
   final ToastItem item;
+  final ToastItemOptions options;
+  final ToastBuilder? builder;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final snackBarTheme = theme.snackBarTheme;
-    final options = item.options;
 
     CrossAxisAlignment contentAlignment = .start;
     if (options.centerIcon || item.title == null) {
@@ -178,6 +216,26 @@ class _ToastContent extends StatelessWidget {
           child: item.child!,
         ),
       );
+    }
+
+    final builder = this.builder;
+    if (builder != null) {
+      try {
+        return builder(
+          context,
+          ToastData(
+            id: item.id,
+            type: item.type,
+            title: item.title,
+            message: item.message,
+            options: options,
+            dismiss: () => ToastManager.i.dismiss(item.id),
+          ),
+        );
+      } catch (e, st) {
+        // A faulty builder must not break the toast: fall back to the default.
+        debugPrint('ToastBuilder threw, using default toast content: $e\n$st');
+      }
     }
 
     return Padding(

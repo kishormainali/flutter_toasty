@@ -1,0 +1,117 @@
+# flutter_toasty
+
+> Flutter package for toast notifications. Show toasts from anywhere with static calls (no BuildContext). Six positions, stacked toasts, light/dark theming through a ThemeExtension, and one builder to restyle every toast state.
+
+Import: `import 'package:flutter_toasty/flutter_toasty.dart';`
+Docs: README.md. Runnable demo: example/. Changes: CHANGELOG.md.
+
+## Setup (required, once)
+
+Put `ToastyProvider` in the `builder` of the app widget. Do NOT wrap the app with it.
+
+```dart
+MaterialApp(            // or MaterialApp.router / CupertinoApp / WidgetsApp
+  builder: (context, child) => ToastyProvider(child: child!),
+  home: const HomePage(),
+)
+```
+
+Wrapping `MaterialApp` in `ToastyProvider` fails (no Theme/Localizations/MediaQuery/Overlay for toasts).
+
+`ToastyProvider({required child, ToastyOptions? options, int? maxToasts})`
+
+## Showing toasts
+
+All static on `FlutterToasty`; each returns the toast id (`String`).
+
+```dart
+FlutterToasty.info(String message, {title, onClick, onClose, autoDismiss = true,
+    dismissDuration = const Duration(seconds: 3), showProgressBar = false,
+    progressColor, position});
+FlutterToasty.success(...);  // same parameters as info
+FlutterToasty.warning(...);  // same parameters as info
+FlutterToasty.error(...);    // same parameters as info
+FlutterToasty.custom({message, title, child, onClick, onClose, ToastItemOptions? options, position});
+FlutterToasty.dismiss(String id);
+FlutterToasty.dismissAll();
+```
+
+- `position` is a `ToastPosition` (topLeft, topCenter, topRight, bottomLeft, bottomCenter, bottomRight). If omitted, `ToastyOptions.position` is used.
+- `custom` needs `message` or `child`. A `child` replaces the toast content entirely and wins over any theme builder. Timing for `custom` (autoDismiss, dismissDuration, showProgressBar) goes through `options`.
+- `onClose` runs exactly once per toast however it ends: auto dismiss, close button, tap, `dismiss`, `dismissAll`, or eviction by `maxToasts`.
+- Tapping a toast calls `onClick`, then dismisses it if `ToastyOptions.closeOnClick` is true (default).
+
+## Where to configure what
+
+| Need | Use |
+| --- | --- |
+| Look (colors, icon, text styles, shape, builder), light/dark aware | `ToastyTheme` in `ThemeData.extensions` |
+| Behavior (position, width, pauseOnHover, closeOnClick, maxToasts) | `ToastyProvider(options: ToastyOptions(...), maxToasts: n)` |
+| Timing / callbacks for one toast | arguments of `FlutterToasty.info/...` |
+| One-off look for one toast | `options:` of `FlutterToasty.custom` |
+
+Look precedence, highest first: `options` passed to `custom` > `ToastyTheme` > `ToastyOptions.itemOptions` (deprecated) > built-in defaults. A state left null in `ToastyTheme` falls through.
+
+## Theming
+
+```dart
+MaterialApp(
+  theme: ThemeData(extensions: [
+    ToastyTheme(
+      success: ToastItemOptions(backgroundColor: Colors.green.shade600),
+      error: ToastItemOptions(backgroundColor: Colors.red.shade600),
+    ),
+  ]),
+  darkTheme: ThemeData.dark().copyWith(extensions: [
+    ToastyTheme(
+      success: ToastItemOptions(backgroundColor: Colors.green.shade900),
+      error: ToastItemOptions(backgroundColor: Colors.red.shade900),
+    ),
+  ]),
+  builder: (context, child) => ToastyProvider(child: child!),
+)
+```
+
+- `ToastyTheme({success, error, warning, info, custom, builder})`; `ToastyTheme.all(options, {builder})` applies one set to every state.
+- `ToastItemOptions` fields: backgroundColor, titleTextStyle, contentTextStyle, icon, centerIcon, autoDismiss, dismissDuration, showProgressBar, progressColor, showLeadingIcon, showCloseIcon, shape.
+- GOTCHA: a theme state's options replace that state's whole look. Fields you don't set take the constructor defaults (white background, no icon), not the built-in per-state ones. Set background, text styles and icon together.
+- From a theme, only visual fields are used. `autoDismiss`, `dismissDuration`, `showProgressBar`, `progressColor` always come from the call that showed the toast.
+- Toasts already on screen restyle live when the theme mode or extension changes.
+
+## One design for all states (builder)
+
+```dart
+ToastyTheme(
+  builder: (context, ToastData data) => Row(children: [
+    data.options.icon,
+    Expanded(child: Text(data.message, style: data.options.contentTextStyle)),
+    IconButton(icon: const Icon(Icons.close), onPressed: data.dismiss),
+  ]),
+)
+```
+
+- `ToastData`: `id`, `type` (ToastType), `title`, `message`, `options` (resolved ToastItemOptions), `dismiss()`.
+- The builder replaces only the content inside the card. The card (background, shape, elevation), progress bar, hover pause and tap handling still come from the per-state options. For a card-less design set the state's `backgroundColor` to transparent.
+- `FlutterToasty.custom(child: ...)` overrides the builder. A message-only `custom` uses it.
+- If the builder throws, the default content is shown and the error is logged.
+- There is no builder parameter on `ToastyProvider`; the theme is the only place.
+
+## Behavior to rely on
+
+- Toasts at the same position stack: newest in front at full size, older ones peek out behind as cards (their content shows when they reach the front).
+- Only the front toast's dismiss timer runs. Newest goes first; each older one then gets its full `dismissDuration`. A burst of 3 default toasts clears in about 9 seconds.
+- `maxToasts` (default 3) is per position; the oldest is removed on overflow.
+- `pauseOnHover` pauses the front toast's timer while hovered.
+- Each toast is announced to screen readers.
+- Positions each have an independent stack and timers.
+- Default position: `ToastyProvider` without `options` uses `bottomCenter`. A `ToastyOptions()` you construct yourself without `position` uses `bottomRight`.
+- `ToastyOptions.dismissDuration`, `animationCurve` and `animationDuration` are currently NOT used. Set the duration per call with `dismissDuration:`; the default is 3 seconds.
+
+## Common mistakes
+
+- Wrapping the app instead of using `MaterialApp.builder` (see Setup).
+- Expecting `ToastyOptions` to style toasts: it is behavior only; use `ToastyTheme`.
+- Setting a partial `ToastItemOptions` on a theme state and losing its icon/colors (see Gotcha).
+- Passing a `child` to `custom` and expecting the builder to run.
+- Expecting position/duration/progress-bar changes to affect toasts already on screen: they apply to the next toast.
+- Using `ToastManager` directly: it is internal (not exported). Use `FlutterToasty`.

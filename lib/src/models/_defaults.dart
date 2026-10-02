@@ -118,5 +118,6 @@ final defaultToastyOptions = ToastyOptions(
   dismissDuration: const Duration(seconds: 3),
   animationCurve: Curves.easeInOut,
   animationDuration: const Duration(milliseconds: 300),
+  // ignore: deprecated_member_use_from_same_package
   itemOptions: defaultItemOptions,
 );

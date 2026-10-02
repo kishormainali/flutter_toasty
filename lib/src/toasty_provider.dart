@@ -82,6 +82,7 @@ class ToastyProviderState extends State<ToastyProvider> {
   late final OverlayEntry _childEntry;
   final Map<ToastPosition, OverlayEntry> _toasts = {};
   final Map<ToastPosition, List<ToastItem>> _lastToastsPerPosition = {};
+  late final VoidCallback _listener;
   bool _contextValidated = false;
   late BuildContext _materialAppContext;
 
@@ -101,6 +102,10 @@ class ToastyProviderState extends State<ToastyProvider> {
         return Builder(
           builder: (innerContext) {
             _materialAppContext = innerContext;
+            // Depend on the theme so toasts already on screen are rebuilt
+            // whenever it changes (including each step of its animation).
+            Theme.of(innerContext);
+            _refreshToasts();
             return widget.child;
           },
         );
@@ -108,7 +113,39 @@ class ToastyProviderState extends State<ToastyProvider> {
     );
 
     /// Listen changes in the ToastManager and update the toasts accordingly
-    ToastManager.i.addToastListener(_updateToasts);
+    _listener = ToastManager.i.addToastListener(_updateToasts);
+  }
+
+  @override
+  void didUpdateWidget(covariant ToastyProvider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The app rebuilt (theme mode, theme extensions...): rebuild toasts
+    // that are already on screen so they pick up the new theme right away.
+    _refreshToasts();
+    if (widget.options != oldWidget.options ||
+        widget.maxToasts != oldWidget.maxToasts) {
+      ToastManager.i.configure(
+        options: widget.options,
+        maxToasts: widget.maxToasts,
+      );
+    }
+  }
+
+  bool _refreshScheduled = false;
+
+  /// Rebuilds the toasts on screen after the current frame (entries can't be
+  /// marked dirty while the tree is building).
+  void _refreshToasts() {
+    if (_refreshScheduled || _toasts.isEmpty) return;
+    _refreshScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshScheduled = false;
+      if (!mounted) return;
+      for (final entry in _toasts.values) {
+        entry.markNeedsBuild();
+      }
+    });
+    WidgetsBinding.instance.scheduleFrame();
   }
 
   void _validateContext() {
@@ -137,7 +174,7 @@ class ToastyProviderState extends State<ToastyProvider> {
 
   @override
   void dispose() {
-    ToastManager.i.removeToastListener(_updateToasts);
+    ToastManager.i.removeToastListener(_listener);
     for (final entry in _toasts.values) {
       entry.remove();
     }

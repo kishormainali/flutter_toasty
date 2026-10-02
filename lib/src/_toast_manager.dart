@@ -65,13 +65,18 @@ class ToastManager {
 
   /// Adds a listener to the list of toasts, allowing the UI to
   /// reactively update when toasts are added or removed.
-  void addToastListener(void Function(List<ToastItem>) listener) {
-    _toasts.addListener(() => listener(_toasts.value));
+  ///
+  /// Returns the [VoidCallback] actually registered, which must be passed to
+  /// [removeToastListener] to unsubscribe.
+  VoidCallback addToastListener(void Function(List<ToastItem>) listener) {
+    void wrapped() => listener(_toasts.value);
+    _toasts.addListener(wrapped);
+    return wrapped;
   }
 
   /// Removes a previously added listener from the list of toasts.
-  void removeToastListener(void Function(List<ToastItem>) listener) {
-    _toasts.removeListener(() => listener(_toasts.value));
+  void removeToastListener(VoidCallback listener) {
+    _toasts.removeListener(listener);
   }
 
   /// Configures the ToastManager with custom options and maximum toast count.
@@ -80,7 +85,12 @@ class ToastManager {
   /// while [maxToasts] sets the maximum number of toasts that can be displayed
   void configure({ToastyOptions? options, int? maxToasts}) {
     _defaultOptions = options ?? defaultToastyOptions;
-    _defaultItemOptions = _defaultOptions.itemOptions ?? defaultItemOptions;
+    // Merge so a partial map doesn't lose the defaults of the other types.
+    _defaultItemOptions = {
+      ...defaultItemOptions,
+      // ignore: deprecated_member_use_from_same_package
+      ...?_defaultOptions.itemOptions,
+    };
     _maxToasts = maxToasts ?? _maxToasts;
   }
 
@@ -97,6 +107,7 @@ class ToastManager {
     VoidCallback? onClose,
     ToastItemOptions? options,
     ToastPosition? position,
+    bool explicitOptions = false,
   }) {
     final resolvedOptions = options ?? _defaultItemOptions[type];
     final id = _generateId();
@@ -111,6 +122,7 @@ class ToastManager {
       options: resolvedOptions!,
       position: position,
       type: type,
+      hasExplicitOptions: explicitOptions,
     );
     final current = _toasts.value;
 
@@ -152,6 +164,7 @@ class ToastManager {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     final options = _defaultItemOptions[ToastType.info];
     return _show(
@@ -166,6 +179,7 @@ class ToastManager {
         showProgressBar: showProgressBar,
         progressColor: progressColor,
       ),
+      position: position,
     );
   }
 
@@ -179,6 +193,7 @@ class ToastManager {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     final options = _defaultItemOptions[ToastType.success];
     return _show(
@@ -193,6 +208,7 @@ class ToastManager {
         showProgressBar: showProgressBar,
         progressColor: progressColor,
       ),
+      position: position,
     );
   }
 
@@ -206,6 +222,7 @@ class ToastManager {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     final options = _defaultItemOptions[ToastType.warning];
     return _show(
@@ -220,6 +237,7 @@ class ToastManager {
         showProgressBar: showProgressBar,
         progressColor: progressColor,
       ),
+      position: position,
     );
   }
 
@@ -233,6 +251,7 @@ class ToastManager {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     final options = _defaultItemOptions[ToastType.error];
     return _show(
@@ -247,6 +266,7 @@ class ToastManager {
         showProgressBar: showProgressBar,
         progressColor: progressColor,
       ),
+      position: position,
     );
   }
 
@@ -273,8 +293,8 @@ class ToastManager {
       child != null || message != null,
       'Either a message or a child widget must be provided for a custom toast.',
     );
-    options ??= _defaultOptions.itemOptions?[ToastType.custom];
-    options ??= defaultItemOptions[ToastType.custom];
+    final explicitOptions = options != null;
+    options ??= _defaultItemOptions[ToastType.custom];
     position ??= _defaultOptions.position;
     return _show(
       message ?? '',
@@ -285,6 +305,7 @@ class ToastManager {
       onClose: onClose,
       options: options,
       position: position,
+      explicitOptions: explicitOptions,
     );
   }
 
@@ -294,8 +315,14 @@ class ToastManager {
   ///  which is returned when the toast is shown.
   void dismiss(String id) {
     final current = _toasts.value;
-    final newList = current.where((item) => item.id != id).toList();
-    _toasts.value = newList;
+    final index = current.indexWhere((item) => item.id == id);
+    if (index == -1) return;
+    final removed = current[index];
+    _toasts.value = [
+      ...current.sublist(0, index),
+      ...current.sublist(index + 1),
+    ];
+    removed.onClose?.call();
   }
 
   /// Dismisses all active toasts.

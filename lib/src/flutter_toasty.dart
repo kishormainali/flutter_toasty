@@ -27,6 +27,7 @@ class FlutterToasty {
     List<Widget> actions = const [],
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     return _manager.info(
       message,
@@ -37,6 +38,7 @@ class FlutterToasty {
       dismissDuration: dismissDuration,
       showProgressBar: showProgressBar,
       progressColor: progressColor,
+      position: position,
     );
   }
 
@@ -50,6 +52,7 @@ class FlutterToasty {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     return _manager.success(
       message,
@@ -60,6 +63,7 @@ class FlutterToasty {
       dismissDuration: dismissDuration,
       showProgressBar: showProgressBar,
       progressColor: progressColor,
+      position: position,
     );
   }
 
@@ -73,6 +77,7 @@ class FlutterToasty {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     return _manager.warning(
       message,
@@ -83,6 +88,7 @@ class FlutterToasty {
       dismissDuration: dismissDuration,
       showProgressBar: showProgressBar,
       progressColor: progressColor,
+      position: position,
     );
   }
 
@@ -96,6 +102,7 @@ class FlutterToasty {
     Duration dismissDuration = const Duration(seconds: 3),
     bool showProgressBar = false,
     Color? progressColor,
+    ToastPosition? position,
   }) {
     return _manager.error(
       message,
@@ -106,6 +113,7 @@ class FlutterToasty {
       dismissDuration: dismissDuration,
       showProgressBar: showProgressBar,
       progressColor: progressColor,
+      position: position,
     );
   }
 
@@ -118,7 +126,7 @@ class FlutterToasty {
     VoidCallback? onClick,
     VoidCallback? onClose,
     ToastItemOptions? options,
-    ToastPosition position = ToastPosition.bottomCenter,
+    ToastPosition? position,
   }) {
     assert(
       message != null || child != null,
