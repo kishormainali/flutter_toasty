@@ -13,11 +13,13 @@ class _ToastContextProvider extends StatelessWidget {
     required this.materialContext,
     required this.position,
     required this.toasts,
+    required this.safeAreaMinimum,
   });
 
   final BuildContext materialContext;
   final ToastPosition position;
   final List<ToastItem> toasts;
+  final EdgeInsets safeAreaMinimum;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,7 @@ class _ToastContextProvider extends StatelessWidget {
         textDirection: textDirection,
         // Keep toasts clear of the status bar, notch, home indicator, etc.
         child: SafeArea(
+          minimum: safeAreaMinimum,
           child: ToastPositioned(position: position, toasts: toasts),
         ),
       ),
@@ -54,6 +57,7 @@ class ToastyProvider extends StatefulWidget {
     required this.child,
     this.options,
     this.maxToasts,
+    this.safeAreaMinimum = EdgeInsets.zero,
   });
 
   /// The child widget that will be wrapped by the provider.
@@ -71,6 +75,11 @@ class ToastyProvider extends StatefulWidget {
   /// make room for new ones. This helps prevent overwhelming the user with too
   ///  many toasts and ensures a better user experience.
   final int? maxToasts;
+
+  /// Minimum padding kept between the toasts and the screen edges, applied
+  /// on top of the system insets (status bar, notch, home indicator).
+  /// Each side uses whichever is larger: the system inset or this value.
+  final EdgeInsets safeAreaMinimum;
 
   @override
   ToastyProviderState createState() => ToastyProviderState();
@@ -257,6 +266,7 @@ class ToastyProviderState extends State<ToastyProvider> {
                 materialContext: _materialAppContext,
                 position: pos,
                 toasts: toasts,
+                safeAreaMinimum: widget.safeAreaMinimum,
               );
             },
           );
