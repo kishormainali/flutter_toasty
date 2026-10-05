@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.1 - 2026-10-05
+
+### Added
+
+- `ToastyProvider.safeAreaMinimum` to set a minimum padding between toasts and the screen edges, on top of the system insets.
+
+### Fixed
+
+- Toasts no longer hide under the status bar/notch (top positions) or the home indicator (bottom positions); the safe-area insets were applied to the wrong sides.
+
 ## 1.2.0 - 2026-10-02
 
 ### Added
