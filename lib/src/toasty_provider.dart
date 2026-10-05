@@ -29,9 +29,8 @@ class _ToastContextProvider extends StatelessWidget {
       data: theme,
       child: Directionality(
         textDirection: textDirection,
+        // Keep toasts clear of the status bar, notch, home indicator, etc.
         child: SafeArea(
-          top: position.isBottom,
-          bottom: position.isTop,
           child: ToastPositioned(position: position, toasts: toasts),
         ),
       ),
