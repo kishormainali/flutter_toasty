@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 - 2026-10-12
+
+### Fixed
+
+- Toasts no longer hide behind the on-screen keyboard; bottom toasts now sit just above it.
+
 ## 1.2.1 - 2026-10-05
 
 ### Added
