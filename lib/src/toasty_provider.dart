@@ -31,10 +31,16 @@ class _ToastContextProvider extends StatelessWidget {
       data: theme,
       child: Directionality(
         textDirection: textDirection,
-        // Keep toasts clear of the status bar, notch, home indicator, etc.
-        child: SafeArea(
-          minimum: safeAreaMinimum,
-          child: ToastPositioned(position: position, toasts: toasts),
+        // Lift toasts above the on-screen keyboard.
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          // Keep toasts clear of the status bar, notch, home indicator, etc.
+          child: SafeArea(
+            minimum: safeAreaMinimum,
+            child: ToastPositioned(position: position, toasts: toasts),
+          ),
         ),
       ),
     );

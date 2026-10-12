@@ -350,6 +350,42 @@ class _OverlayChecks extends StatelessWidget {
           ),
           child: const Text('Dialog'),
         ),
+        OutlinedButton(
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (sheetContext) => Padding(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                24 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const TextField(
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: 'Focus to open the keyboard',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Bottom toasts should show above the keyboard'),
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => FlutterToasty.info(
+                      'Visible above the keyboard',
+                      position: ToastPosition.bottomCenter,
+                    ),
+                    child: const Text('Show bottom toast'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          child: const Text('Keyboard'),
+        ),
       ],
     );
   }
